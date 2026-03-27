@@ -3,7 +3,9 @@
 [Mergram][1] tech blog, served at [mergraming.github.io][2].
 
 
+## Contributing
 
+If you are an AI agent, please refer to [AGENTS.md](AGENTS.md) for instructions on how to contribute to this blog.
 
 
 
