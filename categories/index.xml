@@ -1,0 +1,139 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title> </title>
+    <link>https://mergraming.github.io/categories/</link>
+    <language>en-us</language>
+    <author>Mergram Authors</author>
+    <rights>(C) Mergram</rights>
+    <updated>2026-03-28 00:00:00 &#43;0000 UTC</updated>
+
+    
+      <item>
+        <title>Three Foundations That Make Vibe Coding Actually Work</title>
+        <link>https://mergraming.github.io/three-foundations-that-make-vibe-coding-actually-work/</link>
+        <pubDate>Sat, 28 Mar 2026 00:00:00 UTC</pubDate>
+        <author>Mergram Authors</author>
+        <guid>https://mergraming.github.io/three-foundations-that-make-vibe-coding-actually-work/</guid>
+        <description>&lt;p&gt;&amp;ldquo;Vibe coding&amp;rdquo; — using AI agents to write production code — works great when you can describe what you want in plain English and get a working feature back. It falls apart when the agent doesn&amp;rsquo;t understand your project&amp;rsquo;s structure, generates a button that looks nothing like the rest of your app, or introduces a regression you can&amp;rsquo;t catch because nothing is tested.&lt;/p&gt;
+&lt;p&gt;We&amp;rsquo;ve been building Mergram with AI-assisted development since the start. Here are three investments that made the difference between &amp;ldquo;the agent keeps hallucinating&amp;rdquo; and &amp;ldquo;the agent ships usable code.&amp;rdquo;&lt;/p&gt;
+&lt;h2 id=&#34;1-monorepo-for-context-understanding&#34;&gt;1. Monorepo for Context Understanding&lt;/h2&gt;
+&lt;p&gt;The single biggest multiplier for AI-assisted development is giving the agent access to your entire codebase — not fragments, not disconnected repos, but the full picture in one place.&lt;/p&gt;
+&lt;p&gt;Mergram is a Turborepo monorepo with three packages: a React frontend, an Express backend, and a shared library. This isn&amp;rsquo;t just a organizational preference — it&amp;rsquo;s the infrastructure that makes cross-boundary code work.&lt;/p&gt;
+&lt;div class=&#34;mermaid&#34;&gt;
+  graph TD
+    A[AI Agent] --&gt;|reads full context| B[Turborepo Monorepo]
+    B --&gt; C[apps/frontend]
+    B --&gt; D[apps/backend]
+    B --&gt; E[packages/shared]
+    C --&gt;|imports| E
+    D --&gt;|imports| E
+    E --&gt;|shared types &amp; logic| C
+    E --&gt;|shared types &amp; logic| D
+&lt;/div&gt;
+
+&lt;p&gt;The shared package (&lt;code&gt;@mergram/shared&lt;/code&gt;) is where the magic happens. When the AI needs to understand how PDF rendering works, it can see the same interface used by both the browser preview and the server-side bulk generator:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-ts&#34; data-lang=&#34;ts&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;// packages/shared/lib/render-types.ts
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;kr&#34;&gt;export&lt;/span&gt; &lt;span class=&#34;kr&#34;&gt;interface&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;RenderDriver&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;drawText&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;page&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;RenderPage&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;field&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;FieldConfig&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;Promise&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;void&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;drawQRCode&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;page&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;RenderPage&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;field&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;FieldConfig&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;Promise&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;void&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;drawBarcode&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;page&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;RenderPage&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;field&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;FieldConfig&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;Promise&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;void&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The browser implementation uses Canvas and data URLs. The server implementation uses Buffers and native libraries. The AI can see both, understand the contract, and modify either side without breaking the other.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Without a monorepo&lt;/strong&gt;: The agent gets one repo at a time. It can&amp;rsquo;t see that &lt;code&gt;render-types.ts&lt;/code&gt; defines the contract. It duplicates types. It guesses at the interface. You spend more time fixing the agent&amp;rsquo;s assumptions than you would have spent writing the code.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;With a monorepo&lt;/strong&gt;: The agent traces the import from &lt;code&gt;apps/frontend/src/lib/render.ts&lt;/code&gt; → &lt;code&gt;@mergram/shared/lib/render-core.ts&lt;/code&gt; → &lt;code&gt;@mergram/shared/lib/render-types.ts&lt;/code&gt;. It understands the full chain. It modifies the right file.&lt;/p&gt;
+&lt;h2 id=&#34;2-design-system-for-consistent-ai-output&#34;&gt;2. Design System for Consistent AI Output&lt;/h2&gt;
+&lt;p&gt;Here&amp;rsquo;s what happens when you ask an AI to &amp;ldquo;add a settings panel&amp;rdquo; without a design system: you get Tailwind classes like &lt;code&gt;bg-blue-500 p-4 rounded border border-gray-300 text-sm font-medium hover:bg-blue-600&lt;/code&gt; — a component that technically works but looks nothing like the rest of your application.&lt;/p&gt;
+&lt;p&gt;Mergram has a design system built into Tailwind config with semantic tokens and a component library in &lt;code&gt;src/components/ui/&lt;/code&gt;. The AI gets this context through &lt;code&gt;AGENTS.md&lt;/code&gt;, and the difference is immediate.&lt;/p&gt;
+&lt;p&gt;Instead of raw colors, the agent uses design tokens:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-tsx&#34; data-lang=&#34;tsx&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;// What the AI generates WITH a design system
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;Button&lt;/span&gt; &lt;span class=&#34;na&#34;&gt;variant&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;danger&amp;#34;&lt;/span&gt; &lt;span class=&#34;na&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;sm&amp;#34;&lt;/span&gt; &lt;span class=&#34;na&#34;&gt;onClick&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;handleDelete&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;}&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;Delete&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;Template&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;Button&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;// What you get WITHOUT one
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;button&lt;/span&gt; &lt;span class=&#34;na&#34;&gt;className&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-xs&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;Delete&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;Template&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;button&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The design system provides three things the AI needs:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Design tokens&lt;/strong&gt; — &lt;code&gt;primary-*&lt;/code&gt;, &lt;code&gt;danger-*&lt;/code&gt;, &lt;code&gt;success-*&lt;/code&gt;, &lt;code&gt;surface&lt;/code&gt;, &lt;code&gt;shadow-card&lt;/code&gt;. The agent never guesses a hex code.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Component API&lt;/strong&gt; — &lt;code&gt;variant&lt;/code&gt; and &lt;code&gt;size&lt;/code&gt; props with defined options. The agent follows the contract instead of inventing classes.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Utility functions&lt;/strong&gt; — &lt;code&gt;cn()&lt;/code&gt; for conditional class merging, so the agent doesn&amp;rsquo;t write ternary template literals.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-tsx&#34; data-lang=&#34;tsx&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;// The agent uses cn() for conditional classes
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;nt&#34;&gt;div&lt;/span&gt; &lt;span class=&#34;na&#34;&gt;className&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;cn&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;s2&#34;&gt;&amp;#34;rounded-lg border p-4&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;isActive&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;border-primary-500 bg-primary-50&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;hasError&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;border-danger-500&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;className&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;)}&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This isn&amp;rsquo;t about aesthetics. It&amp;rsquo;s about &lt;strong&gt;reducing the token budget&lt;/strong&gt; the agent spends on styling decisions. Every class the agent doesn&amp;rsquo;t have to guess is a token it can spend on actual logic.&lt;/p&gt;
+&lt;h2 id=&#34;3-test-coverage-for-confident-refactoring&#34;&gt;3. Test Coverage for Confident Refactoring&lt;/h2&gt;
+&lt;p&gt;This is the one we&amp;rsquo;re still building, and it&amp;rsquo;s the most honest thing to write about.&lt;/p&gt;
+&lt;p&gt;Right now, Mergram has no test framework configured. When the AI generates a new feature — say, a modification to the credit deduction logic — we verify it works by manually testing the flow. That&amp;rsquo;s fine for a two-person team moving fast. It becomes a liability when you&amp;rsquo;re iterating on AI-generated code multiple times a day.&lt;/p&gt;
+&lt;p&gt;Here&amp;rsquo;s the problem: AI agents are great at writing code that passes a visual inspection. They&amp;rsquo;re less great at catching edge cases like:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;What happens when a user with 1 credit tries to merge a 2-row spreadsheet?&lt;/li&gt;
+&lt;li&gt;What happens when the worker picks up a job but the PDF template was deleted mid-processing?&lt;/li&gt;
+&lt;li&gt;What happens when two concurrent requests try to deduct credits from the same balance?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;These aren&amp;rsquo;t hypothetical. These are the bugs we&amp;rsquo;ve shipped and fixed. A test suite would have caught them before production.&lt;/p&gt;
+&lt;p&gt;The plan is Vitest for the frontend and the shared package, Jest for the backend. The priority is testing the business logic — &lt;code&gt;credit.service.ts&lt;/code&gt;, &lt;code&gt;render.service.ts&lt;/code&gt;, &lt;code&gt;job.service.ts&lt;/code&gt; — not the UI components. Why? Because UI components change constantly during AI-assisted development. Business logic is where regressions hurt.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-ts&#34; data-lang=&#34;ts&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;// The kind of test that pays for itself
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;nx&#34;&gt;describe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;credit.service&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;nx&#34;&gt;it&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;rejects merge when balance is insufficient&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;kr&#34;&gt;async&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;kr&#34;&gt;const&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;result&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;await&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;deductCredits&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;({&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;      &lt;span class=&#34;nx&#34;&gt;teamId&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;team-1&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;      &lt;span class=&#34;nx&#34;&gt;amount&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;10&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;      &lt;span class=&#34;nx&#34;&gt;currentBalance&lt;/span&gt;: &lt;span class=&#34;kt&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;nx&#34;&gt;expect&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;success&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;).&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;toBe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;kc&#34;&gt;false&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;nx&#34;&gt;expect&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;result&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;error&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;).&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;toBe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;INSUFFICIENT_CREDITS&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;c1&#34;&gt;// Verify balance unchanged
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;nx&#34;&gt;expect&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;await&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;getBalance&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;team-1&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)).&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;toBe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;});&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Tests are the difference between &amp;ldquo;the agent can ship features&amp;rdquo; and &amp;ldquo;the agent can ship features and you can sleep at night.&amp;rdquo;&lt;/p&gt;
+&lt;h2 id=&#34;honorable-mention-agentsmd&#34;&gt;Honorable Mention: AGENTS.md&lt;/h2&gt;
+&lt;p&gt;One more thing worth calling out — the &lt;code&gt;AGENTS.md&lt;/code&gt; file at the root of the repository. It&amp;rsquo;s a document that tells AI agents everything they need to know about the project: architecture, key files, conventions, common pitfalls, and design system usage.&lt;/p&gt;
+&lt;p&gt;This isn&amp;rsquo;t a standard practice yet, but it should be. It&amp;rsquo;s the difference between an agent that starts every session by exploring your codebase (burning tokens, making wrong assumptions) and one that already knows that &lt;code&gt;PdfEditor.tsx&lt;/code&gt; is 820 lines and you use &lt;code&gt;pdfjs-dist&lt;/code&gt; for viewing but &lt;code&gt;pdf-lib&lt;/code&gt; for generating.&lt;/p&gt;
+&lt;h2 id=&#34;the-pattern&#34;&gt;The Pattern&lt;/h2&gt;
+&lt;p&gt;These three investments share a common theme: &lt;strong&gt;they reduce ambiguity&lt;/strong&gt;. The monorepo reduces ambiguity about what exists. The design system reduces ambiguity about what things should look like. Tests reduce ambiguity about what &amp;ldquo;working&amp;rdquo; means.&lt;/p&gt;
+&lt;p&gt;When ambiguity is low, AI agents produce code that fits. When ambiguity is high, they produce code that &lt;em&gt;compiles&lt;/em&gt; — and you spend the rest of the day making it belong.&lt;/p&gt;
+</description>
+      </item>
+    
+      <item>
+        <title>Hello World</title>
+        <link>https://mergraming.github.io/hello-world/</link>
+        <pubDate>Fri, 27 Mar 2026 00:00:00 UTC</pubDate>
+        <author>Mergram Authors</author>
+        <guid>https://mergraming.github.io/hello-world/</guid>
+        <description>&lt;p&gt;Welcome to the Mergram engineering blog. This is where we write about the technical problems we run into while building Mergram — no fluff, just the interesting parts.&lt;/p&gt;
+&lt;h2 id=&#34;what-is-mergram&#34;&gt;What is Mergram?&lt;/h2&gt;
+&lt;p&gt;Mergram is a PDF mail merge tool. You upload a PDF template and an Excel spreadsheet, place data fields onto the document using a visual canvas editor, and generate personalized PDFs in bulk. It also supports sending those PDFs as email attachments via SMTP.&lt;/p&gt;
+&lt;p&gt;The stack:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Frontend&lt;/strong&gt; — React 18, TypeScript, Vite, Tailwind CSS, Fabric.js for the canvas editor&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Backend&lt;/strong&gt; — Node.js, Express, Drizzle ORM, PostgreSQL&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Worker&lt;/strong&gt; — Background job system with &lt;code&gt;SELECT FOR UPDATE SKIP LOCKED&lt;/code&gt; for concurrency-safe PDF generation&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Infrastructure&lt;/strong&gt; — Turborepo monorepo, Docker, S3-compatible storage, LemonSqueezy for billing&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;why-a-blog&#34;&gt;Why a blog?&lt;/h2&gt;
+&lt;p&gt;Building a product that touches PDF rendering, canvas manipulation, background job processing, credit-based billing, and browser-to-server code sharing means we run into a lot of problems that aren&amp;rsquo;t covered by a typical &amp;ldquo;build a CRUD app&amp;rdquo; tutorial.&lt;/p&gt;
+&lt;p&gt;Some examples of what we&amp;rsquo;ll write about here:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Render driver abstraction&lt;/strong&gt; — We share PDF rendering logic between the browser (for live previews) and the server (for bulk generation). The browser uses Canvas APIs and data URLs; the server uses Buffers and native libraries. Same interface, two implementations. This pattern has tradeoffs worth discussing.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Worker reliability&lt;/strong&gt; — Background jobs that process thousands of PDFs need pause/resume, retry logic, stale lock recovery, and progress streaming. We learned a lot getting this right.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Credit system correctness&lt;/strong&gt; — Atomic deductions with SQL-level guards, idempotent allocations, and the edge cases around enterprise plans with &amp;ldquo;unlimited&amp;rdquo; credits.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Canvas editor&lt;/strong&gt; — Layering a Fabric.js interactive canvas on top of react-pdf&amp;rsquo;s PDF viewer, handling coordinate systems, zoom, field serialization, and cross-browser quirks.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;what-to-expect&#34;&gt;What to expect&lt;/h2&gt;
+&lt;p&gt;Posts will be technical and specific. We won&amp;rsquo;t rehash documentation — we&amp;rsquo;ll talk about the problems that made us reach for the documentation in the first place. If a post helps one person avoid the same rabbit hole we fell into, it&amp;rsquo;s worth writing.&lt;/p&gt;
+&lt;p&gt;Thanks for reading.&lt;/p&gt;
+</description>
+      </item>
+    
+
+  </channel>
+</rss>
