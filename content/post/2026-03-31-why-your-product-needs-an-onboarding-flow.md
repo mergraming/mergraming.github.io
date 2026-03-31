@@ -17,7 +17,7 @@ Mergram's core flow has four steps: upload a PDF template, load a spreadsheet, p
 We had an `EmptyState` component — the reusable one with an icon, title, and action button — but it only told users to upload a file. It didn't explain *why*, or what would happen next, or how the pieces fit together. The user had to discover the entire workflow through trial and error.
 
 ```mermaid
-graph LR
+graph TD
     A[User signs up] --> B[Lands on editor]
     B --> C[Blank canvas]
     C --> D{What do I do?}
@@ -33,7 +33,7 @@ The fix wasn't adding more documentation or a longer help page. It was guiding t
 We built a guided tour that activates automatically on first login. It walks the user through each step of the mail merge workflow using a spotlight overlay — a dark backdrop with a cutout that highlights the relevant UI element.
 
 ```mermaid
-graph LR
+graph TD
     A["1. Welcome"] --> B["2. Upload PDF"]
     B --> C["3. Upload Excel"]
     C --> D["4. Place Fields"]
@@ -219,22 +219,5 @@ Onboarding isn't about making your product feel polished. It's about **reducing 
 Before the tour, a new user had to: find their own PDF, find their own spreadsheet, figure out which goes first, discover the drag-and-drop mechanic, and find the merge button. That's five cognitive jumps, any one of which could be the jump where they leave.
 
 After the tour: the user watches the product work with demo data in about sixty seconds. They understand the workflow. They've seen the canvas, the sidebar, and the merge button in context. When they bring their own files, they already know where everything goes.
-
-```mermaid
-graph TD
-    subgraph "Before Onboarding"
-        A1[Sign up] --> A2[Blank canvas]
-        A2 --> A3{Find PDF}
-        A3 --> A4{Find spreadsheet}
-        A4 --> A5{Discover drag-and-drop}
-        A5 --> A6{Find merge button}
-        A6 --> A7["First value moment"]
-    end
-
-    subgraph "After Onboarding"
-        B1[Sign up] --> B2["60-second guided tour"]
-        B2 --> B3["First value moment"]
-    end
-```
 
 If you're building a product where the user needs to understand a multi-step workflow before they can get value — and most products are like this — the onboarding tour isn't a feature you add later. It's the first feature you ship.

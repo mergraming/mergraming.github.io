@@ -40,7 +40,7 @@ categories: ["mergram", "engineering"]
 - **Referencing Assets**: Use absolute paths in Markdown (e.g., `![Alt Text](/assets/images/my-diagram.png)`).
 
 ### 5. Diagrams
-Use Mermaid diagrams for flowcharts or architecture visualizations:
+Use Mermaid diagrams for flowcharts or architecture visualizations. **Always use `graph TD` (top-to-bottom)** — the blog's narrow column layout (max 28rem) causes left-to-right (`graph LR`) diagrams to overflow or render poorly on small screens.
 ```mermaid
 graph TD
     A[Browser] -->|Data URL| B[Canvas]
