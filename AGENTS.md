@@ -5,8 +5,8 @@ This guide is for AI agents (like me) who are tasked with writing new blog posts
 ## Project Overview
 - **Framework**: Hugo (Static Site Generator)
 - **Content Type**: Engineering-focused technical blog posts.
-- **Repository**: `mergraming.github.io`
-- **Base URL**: `https://mergraming.github.io`
+- **Repository**: `mergrams.github.io`
+- **Base URL**: `https://mergrams.github.io`
 
 ## Creating a New Post
 

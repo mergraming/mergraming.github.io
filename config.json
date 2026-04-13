@@ -3,7 +3,7 @@
   "layoutdir": "layouts",
   "publishdir": "public",
   "builddrafts": false,
-  "baseurl": "https://mergraming.github.io",
+  "baseurl": "https://mergrams.github.io",
   "canonifyurls": true,
   "permalinks": {
     "post": "::title/",
@@ -32,7 +32,7 @@
     ]
   },
   "params": {
-    "Title": "Mergraming",
+    "Title": "Mergrams",
     "Brand": "Mergram",
     "Tagline": "A programming blog",
     "Description": "Mergram engineering blog",

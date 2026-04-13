@@ -1,6 +1,6 @@
 ---
 title: "How We Prevented Silent Data Loss with Template Locking"
-date: "2026-04-30"
+date: "2026-04-13"
 categories: ["mergram", "engineering"]
 ---
 
