@@ -83,19 +83,21 @@ This isn't about aesthetics. It's about **reducing the token budget** the agent 
 
 ## 3. Test Coverage for Confident Refactoring
 
-This is the one we're still building, and it's the most honest thing to write about.
+This is the investment that took the longest to pay off, but the one that matters most now.
 
-Right now, Mergram has no test framework configured. When the AI generates a new feature — say, a modification to the credit deduction logic — we verify it works by manually testing the flow. That's fine for a two-person team moving fast. It becomes a liability when you're iterating on AI-generated code multiple times a day.
+When we started, Mergram had no tests. Every AI-generated feature was verified by manual testing. That worked for a two-person team moving fast. It became a liability when we started iterating on AI-generated code multiple times a day.
 
-Here's the problem: AI agents are great at writing code that passes a visual inspection. They're less great at catching edge cases like:
+The bugs were predictable:
 
 - What happens when a user with 1 credit tries to merge a 2-row spreadsheet?
 - What happens when the worker picks up a job but the PDF template was deleted mid-processing?
 - What happens when two concurrent requests try to deduct credits from the same balance?
 
-These aren't hypothetical. These are the bugs we've shipped and fixed. A test suite would have caught them before production.
+We shipped every one of those. A test suite would have caught them before production.
 
-The plan is Vitest for the frontend and the shared package, Jest for the backend. The priority is testing the business logic — `credit.service.ts`, `render.service.ts`, `job.service.ts` — not the UI components. Why? Because UI components change constantly during AI-assisted development. Business logic is where regressions hurt.
+Today, Mergram runs Vitest on the frontend and Jest on the backend, with coverage thresholds enforced in CI. The test suite covers backend services, routes, middleware, and workers — as well as frontend components, hooks, and libraries. The shared package is tested from both sides.
+
+We started with business logic — `credit.service.ts`, `render.service.ts`, `job.service.ts` — because that's where regressions hurt most. But the UI is tested too, from editor hooks to tool components to auth flows.
 
 ```ts
 // The kind of test that pays for itself
@@ -114,7 +116,7 @@ describe("credit.service", () => {
 });
 ```
 
-Tests are the difference between "the agent can ship features" and "the agent can ship features and you can sleep at night."
+Tests are the difference between "the agent can ship features" and "the agent can ship features and you can sleep at night." They're also what lets the agent refactor confidently — change the implementation, run the suite, and know immediately if something broke.
 
 ## Honorable Mention: AGENTS.md
 
